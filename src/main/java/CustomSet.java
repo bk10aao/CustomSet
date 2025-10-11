@@ -59,8 +59,7 @@ public class CustomSet<E> implements Cloneable, SetInterface<E> {
 
     public boolean addAll(Collection<E> c) {
         int n = size;
-        for(E e : c)
-            add(e);
+        c.forEach(this::add);
         return n < size;
     }
 
@@ -88,10 +87,7 @@ public class CustomSet<E> implements Cloneable, SetInterface<E> {
     }
 
     public boolean containsAll(Collection<E> c) {
-        for(E e : c)
-            if (!contains(e))
-                return false;
-        return true;
+        return c.stream().allMatch(this::contains);
     }
 
     public boolean isEmpty() {
