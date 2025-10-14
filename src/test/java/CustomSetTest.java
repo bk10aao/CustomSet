@@ -215,7 +215,7 @@ class CustomSetTest {
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_40_50_onRetailAllForCollectionContainingValueThatDoesNotExist_returnsFalse() {
+    public void givenSetOfValue_10_20_30_40_50_onRetainAllForCollectionContainingValueThatDoesNotExist_returnsTrueAndEmptiesSet() {
         CustomSet<Integer> customSet = new CustomSet<>();
         customSet.add(10);
         customSet.add(20);
@@ -224,8 +224,8 @@ class CustomSetTest {
         customSet.add(50);
         Collection<Integer> c = new ArrayList<>();
         c.add(60);
-        assertFalse(customSet.retainAll(c));
-        assertEquals(5, customSet.size());
+        assertTrue(customSet.retainAll(c));
+        assertEquals(0, customSet.size());
     }
 
     @Test
