@@ -1,4 +1,5 @@
 import java.util.Collection;
+import java.util.Iterator;
 
 public interface SetInterface<E> {
 
@@ -43,6 +44,8 @@ public interface SetInterface<E> {
      */
     boolean isEmpty();
 
+    Iterator<E> iterator();
+
     /**
      * Remove object from Set.
      * @param item to be removed
@@ -75,6 +78,8 @@ public interface SetInterface<E> {
      * @return T[] set values
      */
     E[] toArray();
+
+    <T> T[] toArray(T[] a);
 
     /**
      * Get Set object as String

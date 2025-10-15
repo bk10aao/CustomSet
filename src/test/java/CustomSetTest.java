@@ -361,12 +361,13 @@ class CustomSetTest {
         Collection<Integer> collection = IntStream.iterate(0, i -> i <= 50, i -> i + 10).boxed().collect(Collectors.toList());
         CustomSet<Integer> customSet = new CustomSet<>(collection);
         String setAsString = customSet.toString();
+        System.out.println(setAsString);
         assertTrue(setAsString.contains("10"));
         assertTrue(setAsString.contains("20"));
         assertTrue(setAsString.contains("30"));
         assertTrue(setAsString.contains("40"));
         assertTrue(setAsString.contains("50"));
-        String pattern = "\\{ [0-9]+(, [0-9]+)+ }";
+        String pattern = "\\{[0-9]+(, [0-9]+)+}";
         assertTrue(setAsString.matches(pattern));
     }
 

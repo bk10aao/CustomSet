@@ -1,16 +1,21 @@
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.IntStream;
 
-public class CustomSet<E> implements SetInterface<E> {
+public class CustomSet<E> implements Set<E> {
 
-    private static double LOAD_FACTOR = 0.75;
+    private double LOAD_FACTOR = 0.75;
     private int primesIndex = 0;
     private int size = 0;
     private int setSize = primes[primesIndex];
+
+    private transient int modCount = 0;
 
     private LinkedList<E>[] set;
 
@@ -20,10 +25,10 @@ public class CustomSet<E> implements SetInterface<E> {
     }
 
     @SuppressWarnings("unchecked")
-    public CustomSet(final Collection<E> c) {
+    public CustomSet(final Collection<? extends E> c) {
         if(c == null)
             throw new NullPointerException();
-        set = new LinkedList[primes[primesIndex]];
+        generateSet(Math.max((int) (c.size() / LOAD_FACTOR) + 1, 1));
         addAll(c);
     }
 
@@ -38,16 +43,16 @@ public class CustomSet<E> implements SetInterface<E> {
             throw new IllegalArgumentException();
         if (loadFactor <= 0 || Double.isNaN(loadFactor) || Double.isInfinite(loadFactor))
             throw new IllegalArgumentException();
+        this.LOAD_FACTOR = loadFactor;
         generateSet(initialCapacity);
-        LOAD_FACTOR = loadFactor;
     }
 
+    @Override
     public boolean add(final E item) {
         if(item == null)
             throw new NullPointerException();
-        int hash = Math.abs(item.hashCode());
-        int index = hash % setSize;
-        if (contains(item, hash))
+        int index = Math.abs(item.hashCode()) % setSize;
+        if (contains(item, index))
             return false;
         if (set[index] == null)
             set[index] = new LinkedList<>();
@@ -58,6 +63,7 @@ public class CustomSet<E> implements SetInterface<E> {
         return true;
     }
 
+    @Override
     public boolean addAll(final Collection<? extends E> c) {
         if(c == null)
             throw new NullPointerException();
@@ -67,6 +73,7 @@ public class CustomSet<E> implements SetInterface<E> {
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public void clear() {
         primesIndex = 0;
         setSize = primes[primesIndex];
@@ -82,13 +89,15 @@ public class CustomSet<E> implements SetInterface<E> {
         clone.setSize = this.setSize;
         clone.size = this.size;
         clone.set = new LinkedList[setSize];
+        clone.LOAD_FACTOR = this.LOAD_FACTOR;
         for (int i = 0; i < set.length; i++)
             if (set[i] != null)
                 clone.set[i] = new LinkedList<>(set[i]);
         return clone;
     }
 
-    public boolean contains(final E item) {
+    @Override
+    public boolean contains(final Object item) {
         if(item == null)
             throw new NullPointerException();
         int index = Math.abs(item.hashCode()) % setSize;
@@ -97,44 +106,75 @@ public class CustomSet<E> implements SetInterface<E> {
         return set[index].contains(item);
     }
 
-    public boolean containsAll(final Collection<? extends E> c) {
+    @Override
+    public boolean containsAll(final Collection<?> c) {
         if(c == null)
             throw new NullPointerException();
         return c.stream().allMatch(this::contains);
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Compares this set with another CustomSet for equality. Returns true if the other
+     * set has the same size and contains all the same elements.
+     *
+     * @param o the object to compare with
+     * @return true if the sets are equal
+     */
     @Override
     public boolean equals(final Object o) {
         if (o == this)
             return true;
-        if (!(o instanceof SetInterface<?> other))
+        if (!(o instanceof Set<?> other) || other.size() != size())
             return false;
-        if (other.size() != size())
-            return false;
-        return containsAll((Collection<E>) other);
+        return containsAll(other);
     }
 
     @Override
     public int hashCode() {
-        int hash = 0;
-        for (LinkedList<E> list : set)
-            if (list != null)
-                for (E item : list)
-                    hash += item.hashCode();
-        return hash;
+        return Arrays.stream(set)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .mapToInt(Object::hashCode)
+                .sum();
     }
 
+    @Override
     public boolean isEmpty() {
         return size == 0;
     }
 
-    public boolean remove(final E item) {
+    @Override
+    public Iterator<E> iterator() {
+        final int expectedModCount = modCount;
+        return new Iterator<>() {
+            private int bucketIndex = 0;
+            private Iterator<E> currentIterator = null;
+            private int elementsReturned = 0;
+
+            @Override
+            public boolean hasNext() {
+                if (expectedModCount != modCount) throw new ConcurrentModificationException();
+                return elementsReturned < size;
+            }
+
+            @Override
+            public E next() {
+                if (expectedModCount != modCount) throw new ConcurrentModificationException();
+                if (!hasNext()) throw new NoSuchElementException();
+                // ... existing logic ...
+                elementsReturned++;
+                return currentIterator.next();
+            }
+        };
+    }
+
+    @Override
+    public boolean remove(final Object item) {
         if(item == null)
             throw new NullPointerException();
-        if(!contains(item))
-            return false;
         int index = Math.abs(item.hashCode()) % setSize;
+        if (!contains(item, index))
+            return false;
         set[index].remove(item);
         if(set[index].isEmpty())
             set[index] = null;
@@ -144,18 +184,17 @@ public class CustomSet<E> implements SetInterface<E> {
         return true;
     }
 
-    public boolean removeAll(final Collection<? extends E> c) {
+    @Override
+    public boolean removeAll(final Collection<?> c) {
         boolean changed = false;
-        for(E item : c) {
-            if(item == null)
-                throw new NullPointerException();
-            if(remove(item))
+        for(Object item : c)
+            if (remove(item))
                 changed = true;
-        }
         return changed;
     }
 
-    public boolean retainAll(final Collection<? extends E> c) {
+    @Override
+    public boolean retainAll(final Collection<?> c) {
         if (c == null || c.contains(null))
             throw new NullPointerException();
         boolean modified = false;
@@ -167,39 +206,59 @@ public class CustomSet<E> implements SetInterface<E> {
         return modified;
     }
 
+    @Override
     public int size() {
         return size;
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public E[] toArray() {
         E[] arr = (E[]) new Object[size];
-        int idx = 0;
-        for(LinkedList<E> list : set) {
-            if (list == null)
-                continue;
-            for (E item : list)
-                arr[idx++] = item;
-        }
+        int[] idx = {0};
+        Arrays.stream(set)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .forEach(item -> arr[idx[0]++] = item);
         return arr;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T[] toArray(T[] a) {
+        T[] arrayToFill;
+        if (a.length < size)
+            arrayToFill = (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
+        else
+            arrayToFill = a;
+        int[] idx = {0};
+        Arrays.stream(set)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .forEach(item -> arrayToFill[idx[0]++] = (T) item);
+        if (a.length > size) {
+            arrayToFill[size] = null;
+        }
+        return arrayToFill;
     }
 
     @Override
     public String toString() {
-        if(size == 0) return "{ }";
-        StringBuilder stringBuilder = new StringBuilder("{ ");
+        if (size == 0) return "{ }";
+        StringBuilder sb = new StringBuilder("{");
+        boolean[] first = {true};
         Arrays.stream(set)
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
-                .forEach(item -> stringBuilder.append(item)
-                                                .append(", "));
-        return stringBuilder.replace(stringBuilder.lastIndexOf(", "), stringBuilder.length(), " }").toString();
+                .forEach(item -> {
+                    if (!first[0]) sb.append(", ");
+                    sb.append(item);
+                    first[0] = false;
+                });
+        return sb.append('}').toString();
     }
 
-    private boolean contains(final E item, int hash) {
-        if(item == null)
-            throw new NullPointerException();
-        int index = hash % setSize;
+    private boolean contains(final Object item, final int index) {
         return set[index] != null && set[index].contains(item);
     }
 
@@ -223,15 +282,19 @@ public class CustomSet<E> implements SetInterface<E> {
 
     @SuppressWarnings("unchecked")
     private void generateSet(final int initialCapacity) {
-        if(initialCapacity > primes[primes.length - 1])
+        setSize = primes[0];
+        primesIndex = 0;
+        if (initialCapacity > primes[primes.length - 1]) {
+            setSize = primes[primes.length - 1];
             primesIndex = primes.length - 1;
-        else
-            for (int i = primesIndex + 1; i < primes.length; i++)
-                if (primes[i] > initialCapacity) {
+        } else
+            for (int i = 0; i < primes.length; i++) {
+                if (primes[i] >= initialCapacity) {
+                    setSize = primes[i];
                     primesIndex = i;
                     break;
                 }
-        setSize = primes[primesIndex];
+            }
         set = new LinkedList[setSize];
     }
 
@@ -253,7 +316,7 @@ public class CustomSet<E> implements SetInterface<E> {
         set = newSet;
     }
 
-    private boolean retain(final Collection<? extends E> c, final LinkedList<E> list, boolean modified, int index) {
+    private boolean retain(final Collection<?> c, final LinkedList<E> list, boolean modified, int index) {
         Iterator<E> iterator = list.iterator();
         while (iterator.hasNext())
             if (!c.contains(iterator.next())) {
