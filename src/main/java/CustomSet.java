@@ -153,15 +153,24 @@ public class CustomSet<E> implements Set<E> {
 
             @Override
             public boolean hasNext() {
-                if (expectedModCount != modCount) throw new ConcurrentModificationException();
+                if (expectedModCount != modCount)
+                    throw new ConcurrentModificationException();
                 return elementsReturned < size;
             }
 
             @Override
             public E next() {
-                if (expectedModCount != modCount) throw new ConcurrentModificationException();
-                if (!hasNext()) throw new NoSuchElementException();
-                // ... existing logic ...
+                if (expectedModCount != modCount)
+                    throw new ConcurrentModificationException();
+                if (!hasNext())
+                    throw new NoSuchElementException();
+                while (currentIterator == null || !currentIterator.hasNext()) {
+                    while (bucketIndex < set.length && set[bucketIndex] == null)
+                        bucketIndex++;
+                    if (bucketIndex >= set.length)
+                        throw new NoSuchElementException();
+                    currentIterator = set[bucketIndex++].iterator();
+                }
                 elementsReturned++;
                 return currentIterator.next();
             }
