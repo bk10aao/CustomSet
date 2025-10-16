@@ -215,7 +215,7 @@ class CustomSetTest {
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_40_50_onRetailAllForCollectionContainingValueThatDoesNotExist_returnsFalse() {
+    public void givenSetOfValue_10_20_30_40_50_onRetainAllForCollectionContainingValueThatDoesNotExist_returnsTrueAndEmptiesSet() {
         CustomSet<Integer> customSet = new CustomSet<>();
         customSet.add(10);
         customSet.add(20);
@@ -224,8 +224,8 @@ class CustomSetTest {
         customSet.add(50);
         Collection<Integer> c = new ArrayList<>();
         c.add(60);
-        assertFalse(customSet.retainAll(c));
-        assertEquals(5, customSet.size());
+        assertTrue(customSet.retainAll(c));
+        assertEquals(0, customSet.size());
     }
 
     @Test
@@ -361,12 +361,13 @@ class CustomSetTest {
         Collection<Integer> collection = IntStream.iterate(0, i -> i <= 50, i -> i + 10).boxed().collect(Collectors.toList());
         CustomSet<Integer> customSet = new CustomSet<>(collection);
         String setAsString = customSet.toString();
+        System.out.println(setAsString);
         assertTrue(setAsString.contains("10"));
         assertTrue(setAsString.contains("20"));
         assertTrue(setAsString.contains("30"));
         assertTrue(setAsString.contains("40"));
         assertTrue(setAsString.contains("50"));
-        String pattern = "\\{ [0-9]+(, [0-9]+)+ }";
+        String pattern = "\\{[0-9]+(, [0-9]+)+}";
         assertTrue(setAsString.matches(pattern));
     }
 
