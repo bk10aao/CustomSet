@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -8,6 +9,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+/**
+ * A custom implementation of the {@link Set} interface "/>}.
+ * This set does not allow duplicate elements and permits null elements, like {@link HashSet}}.
+ *
+ * @param <E> the type of elements maintained by this set
+ * @author Benjamin Kane
+ * LinkedIn - <a href="https://www.linkedin.com/in/benjamin-kane-81149482/"/>
+ * GitHub account bk10aao - <a href="https://github.com/bk10aao"/>
+ * Repository - <a href="https://github.com/bk10aao/CustomSet"/>
+ */
 public class CustomSet<E> implements Set<E> {
 
     private double LOAD_FACTOR = 0.75;
@@ -15,16 +26,24 @@ public class CustomSet<E> implements Set<E> {
     private int size = 0;
     private int setSize = primes[primesIndex];
 
-    private transient int modCount = 0;
+    private final transient int modCount = 0;
 
     private LinkedList<E>[] set;
 
+    /**
+     * Constructs an empty set with default initial capacity (17) and load factor (0.75).
+     */
     @SuppressWarnings("unchecked")
     public CustomSet() {
         set = new LinkedList[setSize];
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Constructs a set containing the elements of the specified collection.
+     *
+     * @param c the collection whose elements are to be placed into this set
+     * @throws NullPointerException if the specified collection is null
+     */
     public CustomSet(final Collection<? extends E> c) {
         if(c == null)
             throw new NullPointerException();
@@ -32,12 +51,25 @@ public class CustomSet<E> implements Set<E> {
         addAll(c);
     }
 
+    /**
+     * Constructs an empty set with the specified initial capacity and default load factor (0.75).
+     *
+     * @param initialCapacity the initial capacity
+     * @throws IllegalArgumentException if the initial capacity is negative
+     */
     public CustomSet(final int initialCapacity) {
         if(initialCapacity < 0)
             throw new IllegalArgumentException();
         generateSet(initialCapacity);
     }
 
+    /**
+     * Constructs an empty set with the specified initial capacity and load factor.
+     *
+     * @param initialCapacity the initial capacity
+     * @param loadFactor the load factor
+     * @throws IllegalArgumentException if the initial capacity is negative or the load factor is non-positive or NaN
+     */
     public CustomSet(final int initialCapacity, final double loadFactor) {
         if(initialCapacity < 0)
             throw new IllegalArgumentException();
@@ -47,6 +79,14 @@ public class CustomSet<E> implements Set<E> {
         generateSet(initialCapacity);
     }
 
+    /**
+     * Adds the specified element to this set if it is not already present.
+     * If this set already contains the element, the call leaves the set unchanged
+     * and returns {@code false}. This set permits null elements.
+     *
+     * @param item element to be added to this set
+     * @return {@code true} if this set did not already contain the specified element
+     */
     @Override
     public boolean add(final E item) {
         if(item == null)
@@ -63,6 +103,16 @@ public class CustomSet<E> implements Set<E> {
         return true;
     }
 
+    /**
+     * Adds all the elements in the specified collection to this set if they're
+     * not already present. If the specified collection is also a set, the
+     * {@code addAll} operation effectively modifies this set so that its value
+     * is the union of the two sets. Null elements are permitted.
+     *
+     * @param c collection containing elements to be added to this set
+     * @return {@code true} if this set changed as a result of the call
+     * @throws NullPointerException if the specified collection is null
+     */
     @Override
     public boolean addAll(final Collection<? extends E> c) {
         if(c == null)
@@ -72,6 +122,10 @@ public class CustomSet<E> implements Set<E> {
         return n < size;
     }
 
+    /**
+     * Removes all the elements from this set.
+     * The set will be empty after this call returns.
+     */
     @SuppressWarnings("unchecked")
     @Override
     public void clear() {
@@ -80,6 +134,7 @@ public class CustomSet<E> implements Set<E> {
         size = 0;
         set = new LinkedList[setSize];
     }
+
 
     @SuppressWarnings("unchecked")
     @Override
@@ -96,6 +151,13 @@ public class CustomSet<E> implements Set<E> {
         return clone;
     }
 
+    /**
+     * Returns {@code true} if this set contains the specified element.
+     * This set permits null elements.
+     *
+     * @param item element whose presence in this set is to be tested
+     * @return {@code true} if this set contains the specified element
+     */
     @Override
     public boolean contains(final Object item) {
         if(item == null)
@@ -106,6 +168,14 @@ public class CustomSet<E> implements Set<E> {
         return set[index].contains(item);
     }
 
+    /**
+     * Returns {@code true} if this set contains all the elements of the
+     * specified collection. Null elements are permitted in the specified collection.
+     *
+     * @param c collection to be checked for containment in this set
+     * @return {@code true} if this set contains all the elements of the specified collection
+     * @throws NullPointerException if the specified collection is null
+     */
     @Override
     public boolean containsAll(final Collection<?> c) {
         if(c == null)
@@ -114,7 +184,7 @@ public class CustomSet<E> implements Set<E> {
     }
 
     /**
-     * Compares this set with another CustomSet for equality. Returns true if the other
+     * Compares this set with another Set for equality. Returns true if the other
      * set has the same size and contains all the same elements.
      *
      * @param o the object to compare with
@@ -129,6 +199,13 @@ public class CustomSet<E> implements Set<E> {
         return containsAll(other);
     }
 
+    /**
+     * Returns the hash code value for this set. The hash code of a set is
+     * defined to be the sum of the hash codes of the elements in the set,
+     * where the hash code of a {@code null} element is defined to be zero.
+     *
+     * @return the hash code value for this set
+     */
     @Override
     public int hashCode() {
         return Arrays.stream(set)
@@ -138,11 +215,22 @@ public class CustomSet<E> implements Set<E> {
                 .sum();
     }
 
+    /**
+     * Returns {@code true} if this set contains no elements.
+     *
+     * @return {@code true} if this set contains no elements
+     */
     @Override
     public boolean isEmpty() {
         return size == 0;
     }
 
+    /**
+     * Returns an iterator over the elements in this set. The elements are
+     * returned in no particular order.
+     *
+     * @return an iterator over the elements in this set
+     */
     @Override
     public Iterator<E> iterator() {
         final int expectedModCount = modCount;
@@ -177,6 +265,14 @@ public class CustomSet<E> implements Set<E> {
         };
     }
 
+    /**
+     * Removes the specified element from this set if it is present.
+     * Returns {@code true} if this set contained the element. This set
+     * permits null elements.
+     *
+     * @param item object to be removed from this set, if present
+     * @return {@code true} if this set contained the specified element
+     */
     @Override
     public boolean remove(final Object item) {
         if(item == null)
@@ -193,6 +289,17 @@ public class CustomSet<E> implements Set<E> {
         return true;
     }
 
+    /**
+     * Removes from this set all of its elements that are contained in the
+     * specified collection. If the specified collection is also a set, this
+     * operation effectively modifies this set so that its value is the
+     * asymmetric set difference of the two sets. Null elements are permitted
+     * in the specified collection.
+     *
+     * @param c collection containing elements to be removed from this set
+     * @return {@code true} if this set changed as a result of the call
+     * @throws NullPointerException if the specified collection is null
+     */
     @Override
     public boolean removeAll(final Collection<?> c) {
         boolean changed = false;
@@ -202,6 +309,18 @@ public class CustomSet<E> implements Set<E> {
         return changed;
     }
 
+    /**
+     * Retains only the elements in this set that are contained in the
+     * specified collection. In other words, removes from this set all of
+     * its elements that are not contained in the specified collection.
+     * If the specified collection is also a set, this operation effectively
+     * modifies this set so that its value is the intersection of the two sets.
+     * Null elements are permitted in the specified collection.
+     *
+     * @param c collection containing elements to be retained in this set
+     * @return {@code true} if this set changed as a result of the call
+     * @throws NullPointerException if the specified collection is null
+     */
     @Override
     public boolean retainAll(final Collection<?> c) {
         if (c == null || c.contains(null))
@@ -215,11 +334,24 @@ public class CustomSet<E> implements Set<E> {
         return modified;
     }
 
+    /**
+     * Returns the number of elements in this set (its cardinality).
+     *
+     * @return the number of elements in this set (its cardinality)
+     */
     @Override
     public int size() {
         return size;
     }
 
+
+    /**
+     * Returns an array containing all the elements in this set.
+     * The returned array will be "safe" in that no references to it are
+     * maintained by this set.
+     *
+     * @return an array containing all the elements in this set
+     */
     @SuppressWarnings("unchecked")
     @Override
     public E[] toArray() {
@@ -232,6 +364,20 @@ public class CustomSet<E> implements Set<E> {
         return arr;
     }
 
+    /**
+     * Returns an array containing all the elements in this set; the
+     * runtime type of the returned array is that of the specified array.
+     * If the set fits in the specified array, it is returned therein.
+     * Otherwise, a new array is allocated with the runtime type of the
+     * specified array and the size of this set.
+     *
+     * @param a the array into which the elements of this set are to be stored, if it is big enough;
+     *          otherwise, a new array of the same runtime type is allocated
+     * @return an array containing all the elements in this set
+     * @throws ArrayStoreException if the runtime type of the specified array is not a supertype
+     *         of the runtime type of every element in this set
+     * @throws NullPointerException if the specified array is null
+     */
     @SuppressWarnings("unchecked")
     @Override
     public <T> T[] toArray(T[] a) {
@@ -251,6 +397,11 @@ public class CustomSet<E> implements Set<E> {
         return arrayToFill;
     }
 
+    /**
+     * Returns String representation of CustomSet
+     *
+     * @return String representation of CustomSet
+     */
     @Override
     public String toString() {
         if (size == 0) return "{ }";
