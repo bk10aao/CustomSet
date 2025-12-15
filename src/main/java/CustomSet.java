@@ -1,6 +1,5 @@
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -10,7 +9,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 /**
- * A custom implementation of the {@link Set} interface "/>}.
+ * A custom implementation of the {@link Set} interface/>.
  * This set does not allow duplicate elements and permits null elements, like {@link HashSet}}.
  *
  * @param <E> the type of elements maintained by this set
@@ -25,8 +24,6 @@ public class CustomSet<E> implements Set<E> {
     private int primesIndex = 0;
     private int size = 0;
     private int setSize = primes[primesIndex];
-
-    private final transient int modCount = 0;
 
     private LinkedList<E>[] set;
 
@@ -138,8 +135,8 @@ public class CustomSet<E> implements Set<E> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public CustomSet<E> clone() {
-        CustomSet<E> clone = new CustomSet<>();
+    public CustomSet<E> clone() throws CloneNotSupportedException {
+        CustomSet<E> clone = (CustomSet<E>) super.clone();
         clone.primesIndex = this.primesIndex;
         clone.setSize = this.setSize;
         clone.size = this.size;
@@ -233,7 +230,6 @@ public class CustomSet<E> implements Set<E> {
      */
     @Override
     public Iterator<E> iterator() {
-        final int expectedModCount = modCount;
         return new Iterator<>() {
             private int bucketIndex = 0;
             private Iterator<E> currentIterator = null;
@@ -241,15 +237,11 @@ public class CustomSet<E> implements Set<E> {
 
             @Override
             public boolean hasNext() {
-                if (expectedModCount != modCount)
-                    throw new ConcurrentModificationException();
                 return elementsReturned < size;
             }
 
             @Override
             public E next() {
-                if (expectedModCount != modCount)
-                    throw new ConcurrentModificationException();
                 if (!hasNext())
                     throw new NoSuchElementException();
                 while (currentIterator == null || !currentIterator.hasNext()) {
