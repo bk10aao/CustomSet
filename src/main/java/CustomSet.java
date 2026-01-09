@@ -132,7 +132,6 @@ public class CustomSet<E> implements Set<E> {
         set = new LinkedList[setSize];
     }
 
-
     @SuppressWarnings("unchecked")
     @Override
     public CustomSet<E> clone() throws CloneNotSupportedException {
@@ -336,7 +335,6 @@ public class CustomSet<E> implements Set<E> {
         return size;
     }
 
-
     /**
      * Returns an array containing all the elements in this set.
      * The returned array will be "safe" in that no references to it are
@@ -374,10 +372,7 @@ public class CustomSet<E> implements Set<E> {
     @Override
     public <T> T[] toArray(T[] a) {
         T[] arrayToFill;
-        if (a.length < size)
-            arrayToFill = (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
-        else
-            arrayToFill = a;
+        arrayToFill = a.length < size ? (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size) : a;
         int[] idx = {0};
         Arrays.stream(set)
                 .filter(Objects::nonNull)
