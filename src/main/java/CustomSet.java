@@ -42,8 +42,7 @@ public class CustomSet<E> implements Set<E> {
      * @throws NullPointerException if the specified collection is null
      */
     public CustomSet(final Collection<? extends E> c) {
-        if(c == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(c);
         generateSet(Math.max((int) (c.size() / LOAD_FACTOR) + 1, 1));
         addAll(c);
     }
@@ -84,10 +83,8 @@ public class CustomSet<E> implements Set<E> {
      * @param item element to be added to this set
      * @return {@code true} if this set did not already contain the specified element
      */
-    @Override
     public boolean add(final E item) {
-        if(item == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
         if (contains(item, index))
             return false;
@@ -110,10 +107,8 @@ public class CustomSet<E> implements Set<E> {
      * @return {@code true} if this set changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      */
-    @Override
     public boolean addAll(final Collection<? extends E> c) {
-        if(c == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(c);
         int n = size;
         c.forEach(this::add);
         return n < size;
@@ -124,7 +119,6 @@ public class CustomSet<E> implements Set<E> {
      * The set will be empty after this call returns.
      */
     @SuppressWarnings("unchecked")
-    @Override
     public void clear() {
         primesIndex = 0;
         setSize = primes[primesIndex];
@@ -133,7 +127,6 @@ public class CustomSet<E> implements Set<E> {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
     public CustomSet<E> clone() throws CloneNotSupportedException {
         CustomSet<E> clone = (CustomSet<E>) super.clone();
         clone.primesIndex = this.primesIndex;
@@ -154,10 +147,8 @@ public class CustomSet<E> implements Set<E> {
      * @param item element whose presence in this set is to be tested
      * @return {@code true} if this set contains the specified element
      */
-    @Override
     public boolean contains(final Object item) {
-        if(item == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
         if (set[index] == null)
             return false;
@@ -172,10 +163,8 @@ public class CustomSet<E> implements Set<E> {
      * @return {@code true} if this set contains all the elements of the specified collection
      * @throws NullPointerException if the specified collection is null
      */
-    @Override
     public boolean containsAll(final Collection<?> c) {
-        if(c == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(c);
         return c.stream().allMatch(this::contains);
     }
 
@@ -186,7 +175,6 @@ public class CustomSet<E> implements Set<E> {
      * @param o the object to compare with
      * @return true if the sets are equal
      */
-    @Override
     public boolean equals(final Object o) {
         if (o == this)
             return true;
@@ -202,7 +190,6 @@ public class CustomSet<E> implements Set<E> {
      *
      * @return the hash code value for this set
      */
-    @Override
     public int hashCode() {
         return Arrays.stream(set)
                 .filter(Objects::nonNull)
@@ -216,7 +203,6 @@ public class CustomSet<E> implements Set<E> {
      *
      * @return {@code true} if this set contains no elements
      */
-    @Override
     public boolean isEmpty() {
         return size == 0;
     }
@@ -227,19 +213,16 @@ public class CustomSet<E> implements Set<E> {
      *
      * @return an iterator over the elements in this set
      */
-    @Override
     public Iterator<E> iterator() {
         return new Iterator<>() {
             private int bucketIndex = 0;
             private Iterator<E> currentIterator = null;
             private int elementsReturned = 0;
 
-            @Override
             public boolean hasNext() {
                 return elementsReturned < size;
             }
 
-            @Override
             public E next() {
                 if (!hasNext())
                     throw new NoSuchElementException();
@@ -264,10 +247,8 @@ public class CustomSet<E> implements Set<E> {
      * @param item object to be removed from this set, if present
      * @return {@code true} if this set contained the specified element
      */
-    @Override
     public boolean remove(final Object item) {
-        if(item == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
         if (!contains(item, index))
             return false;
@@ -291,8 +272,8 @@ public class CustomSet<E> implements Set<E> {
      * @return {@code true} if this set changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      */
-    @Override
     public boolean removeAll(final Collection<?> c) {
+        Objects.requireNonNull(c);
         boolean changed = false;
         for(Object item : c)
             if (remove(item))
@@ -312,9 +293,9 @@ public class CustomSet<E> implements Set<E> {
      * @return {@code true} if this set changed as a result of the call
      * @throws NullPointerException if the specified collection is null
      */
-    @Override
     public boolean retainAll(final Collection<?> c) {
-        if (c == null || c.contains(null))
+        Objects.requireNonNull(c);
+        if (c.contains(null))
             throw new NullPointerException();
         boolean modified = false;
         for (int i = 0; i < set.length; i++)
@@ -330,7 +311,6 @@ public class CustomSet<E> implements Set<E> {
      *
      * @return the number of elements in this set (its cardinality)
      */
-    @Override
     public int size() {
         return size;
     }
@@ -343,7 +323,6 @@ public class CustomSet<E> implements Set<E> {
      * @return an array containing all the elements in this set
      */
     @SuppressWarnings("unchecked")
-    @Override
     public E[] toArray() {
         E[] arr = (E[]) new Object[size];
         int[] idx = {0};
@@ -369,8 +348,8 @@ public class CustomSet<E> implements Set<E> {
      * @throws NullPointerException if the specified array is null
      */
     @SuppressWarnings("unchecked")
-    @Override
     public <T> T[] toArray(T[] a) {
+        Objects.requireNonNull(a);
         T[] arrayToFill;
         arrayToFill = a.length < size ? (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size) : a;
         int[] idx = {0};
@@ -389,7 +368,6 @@ public class CustomSet<E> implements Set<E> {
      *
      * @return String representation of CustomSet
      */
-    @Override
     public String toString() {
         if (size == 0) return "{ }";
         StringBuilder sb = new StringBuilder("{");
