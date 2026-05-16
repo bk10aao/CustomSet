@@ -84,7 +84,6 @@ public class CustomSet<E> implements Set<E> {
      * @return {@code true} if this set did not already contain the specified element
      */
     public boolean add(final E item) {
-        Objects.requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
         if (contains(item, index))
             return false;
@@ -92,7 +91,7 @@ public class CustomSet<E> implements Set<E> {
             set[index] = new LinkedList<>();
         set[index].add(item);
         size++;
-        if ((double) size / (double) setSize > LOAD_FACTOR)
+        if ((double) size / (double) setSize > LOAD_FACTOR && primesIndex < primes.length)
             expand();
         return true;
     }
@@ -126,18 +125,8 @@ public class CustomSet<E> implements Set<E> {
         set = new LinkedList[setSize];
     }
 
-    @SuppressWarnings("unchecked")
-    public CustomSet<E> clone() throws CloneNotSupportedException {
-        CustomSet<E> clone = (CustomSet<E>) super.clone();
-        clone.primesIndex = this.primesIndex;
-        clone.setSize = this.setSize;
-        clone.size = this.size;
-        clone.set = new LinkedList[setSize];
-        clone.LOAD_FACTOR = this.LOAD_FACTOR;
-        for (int i = 0; i < set.length; i++)
-            if (set[i] != null)
-                clone.set[i] = new LinkedList<>(set[i]);
-        return clone;
+    public CustomSet<E> clone() {
+        return new CustomSet<>(this);
     }
 
     /**
@@ -291,16 +280,16 @@ public class CustomSet<E> implements Set<E> {
      *
      * @param c collection containing elements to be retained in this set
      * @return {@code true} if this set changed as a result of the call
-     * @throws NullPointerException if the specified collection is null
+     * @throws NullPointerException if the specified collection is null or contains null elements
      */
     public boolean retainAll(final Collection<?> c) {
         Objects.requireNonNull(c);
-        if (c.contains(null))
+        if(c.contains(null))
             throw new NullPointerException();
         boolean modified = false;
         for (int i = 0; i < set.length; i++)
             if (set[i] != null)
-                modified = retain(c, set[i], modified, i);
+                modified = retainBucket(c, i) || modified;
         if (setSize > primes[0] && size <= setSize / 4)
             reduce();
         return modified;
@@ -369,7 +358,7 @@ public class CustomSet<E> implements Set<E> {
      * @return String representation of CustomSet
      */
     public String toString() {
-        if (size == 0) return "{ }";
+        if (size == 0) return "{}";
         StringBuilder sb = new StringBuilder("{");
         boolean[] first = {true};
         Arrays.stream(set)
@@ -389,8 +378,6 @@ public class CustomSet<E> implements Set<E> {
 
     @SuppressWarnings("unchecked")
     private void expand() {
-        if(primesIndex + 1 >= primes.length)
-            throw new IllegalStateException();
         setSize = primes[++primesIndex];
         LinkedList<E>[] newSet = new LinkedList[setSize];
         Arrays.stream(set)
@@ -407,8 +394,8 @@ public class CustomSet<E> implements Set<E> {
 
     @SuppressWarnings("unchecked")
     private void generateSet(final int initialCapacity) {
-        setSize = primes[0];
         primesIndex = 0;
+        setSize = primes[0];
         if (initialCapacity > primes[primes.length - 1]) {
             setSize = primes[primes.length - 1];
             primesIndex = primes.length - 1;
@@ -425,8 +412,6 @@ public class CustomSet<E> implements Set<E> {
 
     @SuppressWarnings("unchecked")
     private void reduce() {
-        if(primesIndex == 0)
-            return;
         primesIndex--;
         setSize = primes[primesIndex];
         LinkedList<E>[] newSet = new LinkedList[setSize];
@@ -441,15 +426,17 @@ public class CustomSet<E> implements Set<E> {
         set = newSet;
     }
 
-    private boolean retain(final Collection<?> c, final LinkedList<E> list, boolean modified, int index) {
+    private boolean retainBucket(final Collection<?> c, int index) {
+        LinkedList<E> list = set[index];
         Iterator<E> iterator = list.iterator();
+        boolean modified = false;
         while (iterator.hasNext())
             if (!c.contains(iterator.next())) {
                 iterator.remove();
                 size--;
                 modified = true;
             }
-        if(set[index].isEmpty())
+        if(list.isEmpty())
             set[index] = null;
         return modified;
     }
