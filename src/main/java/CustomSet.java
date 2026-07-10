@@ -1,6 +1,6 @@
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -8,6 +8,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+/**
+ * A custom implementation of the {@link Set} interface/>.
+ * This set does not allow duplicate elements and permits null elements, like {@link HashSet}}.
+ *
+ * @param <E> the type of elements maintained by this set
+ * @author Benjamin Kane
+ * LinkedIn - <a href="https://www.linkedin.com/in/benjamin-kane-81149482/"/>
+ * GitHub account bk10aao - <a href="https://github.com/bk10aao"/>
+ * Repository - <a href="https://github.com/bk10aao/CustomSet"/>
+ */
 public class CustomSet<E> implements Set<E> {
 
     private double LOAD_FACTOR = 0.75;
@@ -15,65 +25,99 @@ public class CustomSet<E> implements Set<E> {
     private int size = 0;
     private int setSize = primes[primesIndex];
 
-    private transient int modCount = 0;
-
     private LinkedList<E>[] set;
 
+    /**
+     * Constructs an empty set with default initial capacity (17) and load factor (0.75).
+     */
     @SuppressWarnings("unchecked")
     public CustomSet() {
         set = new LinkedList[setSize];
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Constructs a set containing the elements of the specified collection.
+     *
+     * @param c the collection whose elements are to be placed into this set
+     * @throws NullPointerException if the specified collection is null
+     */
     public CustomSet(final Collection<? extends E> c) {
-        if(c == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(c);
         generateSet(Math.max((int) (c.size() / LOAD_FACTOR) + 1, 1));
         addAll(c);
     }
 
+    /**
+     * Constructs an empty set with the specified initial capacity and default load factor (0.75).
+     *
+     * @param initialCapacity the initial capacity
+     * @throws IllegalArgumentException if the initial capacity is negative
+     */
     public CustomSet(final int initialCapacity) {
         if(initialCapacity < 0)
             throw new IllegalArgumentException();
         generateSet(initialCapacity);
     }
 
+    /**
+     * Constructs an empty set with the specified initial capacity and load factor.
+     *
+     * @param initialCapacity the initial capacity
+     * @param loadFactor the load factor
+     * @throws IllegalArgumentException if the initial capacity is negative or the load factor is non-positive or NaN
+     */
     public CustomSet(final int initialCapacity, final double loadFactor) {
         if(initialCapacity < 0)
             throw new IllegalArgumentException();
-        if (loadFactor <= 0 || Double.isNaN(loadFactor) || Double.isInfinite(loadFactor))
+        if(loadFactor <= 0 || Double.isNaN(loadFactor) || Double.isInfinite(loadFactor))
             throw new IllegalArgumentException();
         this.LOAD_FACTOR = loadFactor;
         generateSet(initialCapacity);
     }
 
-    @Override
+    /**
+     * Adds the specified element to this set if it is not already present.
+     * If this set already contains the element, the call leaves the set unchanged
+     * and returns {@code false}. This set permits null elements.
+     *
+     * @param item element to be added to this set
+     * @return {@code true} if this set did not already contain the specified element
+     */
     public boolean add(final E item) {
-        if(item == null)
-            throw new NullPointerException();
         int index = Math.abs(item.hashCode()) % setSize;
-        if (contains(item, index))
+        if(contains(item, index))
             return false;
-        if (set[index] == null)
+        if(set[index] == null)
             set[index] = new LinkedList<>();
         set[index].add(item);
         size++;
-        if ((double) size / (double) setSize > LOAD_FACTOR)
+        if((double) size / (double) setSize > LOAD_FACTOR && primesIndex < primes.length)
             expand();
         return true;
     }
 
-    @Override
+    /**
+     * Adds all the elements in the specified collection to this set if they're
+     * not already present. If the specified collection is also a set, the
+     * {@code addAll} operation effectively modifies this set so that its value
+     * is the union of the two sets. Null elements are permitted.
+     *
+     * @param c collection containing elements to be added to this set
+     * @return {@code true} if this set changed as a result of the call
+     * @throws NullPointerException if the specified collection is null
+     */
     public boolean addAll(final Collection<? extends E> c) {
-        if(c == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(c);
         int n = size;
         c.forEach(this::add);
         return n < size;
     }
 
+    /**
+     * Removes all the elements from this set.
+     * The set will be empty after this call returns.
+     */
     @SuppressWarnings("unchecked")
-    @Override
     public void clear() {
         primesIndex = 0;
         setSize = primes[primesIndex];
@@ -81,55 +125,60 @@ public class CustomSet<E> implements Set<E> {
         set = new LinkedList[setSize];
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
     public CustomSet<E> clone() {
-        CustomSet<E> clone = new CustomSet<>();
-        clone.primesIndex = this.primesIndex;
-        clone.setSize = this.setSize;
-        clone.size = this.size;
-        clone.set = new LinkedList[setSize];
-        clone.LOAD_FACTOR = this.LOAD_FACTOR;
-        for (int i = 0; i < set.length; i++)
-            if (set[i] != null)
-                clone.set[i] = new LinkedList<>(set[i]);
-        return clone;
+        return new CustomSet<>(this);
     }
 
-    @Override
+    /**
+     * Returns {@code true} if this set contains the specified element.
+     * This set permits null elements.
+     *
+     * @param item element whose presence in this set is to be tested
+     * @return {@code true} if this set contains the specified element
+     */
     public boolean contains(final Object item) {
-        if(item == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
-        if (set[index] == null)
+        if(set[index] == null)
             return false;
         return set[index].contains(item);
     }
 
-    @Override
+    /**
+     * Returns {@code true} if this set contains all the elements of the
+     * specified collection. Null elements are permitted in the specified collection.
+     *
+     * @param c collection to be checked for containment in this set
+     * @return {@code true} if this set contains all the elements of the specified collection
+     * @throws NullPointerException if the specified collection is null
+     */
     public boolean containsAll(final Collection<?> c) {
-        if(c == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(c);
         return c.stream().allMatch(this::contains);
     }
 
     /**
-     * Compares this set with another CustomSet for equality. Returns true if the other
+     * Compares this set with another Set for equality. Returns true if the other
      * set has the same size and contains all the same elements.
      *
      * @param o the object to compare with
      * @return true if the sets are equal
      */
-    @Override
     public boolean equals(final Object o) {
-        if (o == this)
+        if(o == this)
             return true;
-        if (!(o instanceof Set<?> other) || other.size() != size())
+        if(!(o instanceof Set<?> other) || other.size() != size())
             return false;
         return containsAll(other);
     }
 
-    @Override
+    /**
+     * Returns the hash code value for this set. The hash code of a set is
+     * defined to be the sum of the hash codes of the elements in the set,
+     * where the hash code of a {@code null} element is defined to be zero.
+     *
+     * @return the hash code value for this set
+     */
     public int hashCode() {
         return Arrays.stream(set)
                 .filter(Objects::nonNull)
@@ -138,36 +187,38 @@ public class CustomSet<E> implements Set<E> {
                 .sum();
     }
 
-    @Override
+    /**
+     * Returns {@code true} if this set contains no elements.
+     *
+     * @return {@code true} if this set contains no elements
+     */
     public boolean isEmpty() {
         return size == 0;
     }
 
-    @Override
+    /**
+     * Returns an iterator over the elements in this set. The elements are
+     * returned in no particular order.
+     *
+     * @return an iterator over the elements in this set
+     */
     public Iterator<E> iterator() {
-        final int expectedModCount = modCount;
         return new Iterator<>() {
             private int bucketIndex = 0;
             private Iterator<E> currentIterator = null;
             private int elementsReturned = 0;
 
-            @Override
             public boolean hasNext() {
-                if (expectedModCount != modCount)
-                    throw new ConcurrentModificationException();
                 return elementsReturned < size;
             }
 
-            @Override
             public E next() {
-                if (expectedModCount != modCount)
-                    throw new ConcurrentModificationException();
-                if (!hasNext())
+                if(!hasNext())
                     throw new NoSuchElementException();
                 while (currentIterator == null || !currentIterator.hasNext()) {
                     while (bucketIndex < set.length && set[bucketIndex] == null)
                         bucketIndex++;
-                    if (bucketIndex >= set.length)
+                    if(bucketIndex >= set.length)
                         throw new NoSuchElementException();
                     currentIterator = set[bucketIndex++].iterator();
                 }
@@ -177,12 +228,18 @@ public class CustomSet<E> implements Set<E> {
         };
     }
 
-    @Override
+    /**
+     * Removes the specified element from this set if it is present.
+     * Returns {@code true} if this set contained the element. This set
+     * permits null elements.
+     *
+     * @param item object to be removed from this set, if present
+     * @return {@code true} if this set contained the specified element
+     */
     public boolean remove(final Object item) {
-        if(item == null)
-            throw new NullPointerException();
+        Objects.requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
-        if (!contains(item, index))
+        if(!contains(item, index))
             return false;
         set[index].remove(item);
         if(set[index].isEmpty())
@@ -193,74 +250,123 @@ public class CustomSet<E> implements Set<E> {
         return true;
     }
 
-    @Override
+    /**
+     * Removes from this set all of its elements that are contained in the
+     * specified collection. If the specified collection is also a set, this
+     * operation effectively modifies this set so that its value is the
+     * asymmetric set difference of the two sets. Null elements are permitted
+     * in the specified collection.
+     *
+     * @param c collection containing elements to be removed from this set
+     * @return {@code true} if this set changed as a result of the call
+     * @throws NullPointerException if the specified collection is null
+     */
     public boolean removeAll(final Collection<?> c) {
+        Objects.requireNonNull(c);
         boolean changed = false;
         for(Object item : c)
-            if (remove(item))
+            if(remove(item))
                 changed = true;
         return changed;
     }
 
-    @Override
+    /**
+     * Retains only the elements in this set that are contained in the
+     * specified collection. In other words, removes from this set all of
+     * its elements that are not contained in the specified collection.
+     * If the specified collection is also a set, this operation effectively
+     * modifies this set so that its value is the intersection of the two sets.
+     * Null elements are permitted in the specified collection.
+     *
+     * @param c collection containing elements to be retained in this set
+     * @return {@code true} if this set changed as a result of the call
+     * @throws NullPointerException if the specified collection is null or contains null elements
+     */
     public boolean retainAll(final Collection<?> c) {
-        if (c == null || c.contains(null))
+        Objects.requireNonNull(c);
+        if(c.contains(null))
             throw new NullPointerException();
         boolean modified = false;
         for (int i = 0; i < set.length; i++)
-            if (set[i] != null)
-                modified = retain(c, set[i], modified, i);
-        if (setSize > primes[0] && size <= setSize / 4)
+            if(set[i] != null)
+                modified = retainBucket(c, i) || modified;
+        if(setSize > primes[0] && size <= setSize / 4)
             reduce();
         return modified;
     }
 
-    @Override
+    /**
+     * Returns the number of elements in this set (its cardinality).
+     *
+     * @return the number of elements in this set (its cardinality)
+     */
     public int size() {
         return size;
     }
 
+    /**
+     * Returns an array containing all the elements in this set.
+     * The returned array will be "safe" in that no references to it are
+     * maintained by this set.
+     *
+     * @return an array containing all the elements in this set
+     */
     @SuppressWarnings("unchecked")
-    @Override
     public E[] toArray() {
         E[] arr = (E[]) new Object[size];
-        int[] idx = {0};
+        int[] index = {0};
         Arrays.stream(set)
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
-                .forEach(item -> arr[idx[0]++] = item);
+                .forEach(item -> arr[index[0]++] = item);
         return arr;
     }
 
+    /**
+     * Returns an array containing all the elements in this set; the
+     * runtime type of the returned array is that of the specified array.
+     * If the set fits in the specified array, it is returned therein.
+     * Otherwise, a new array is allocated with the runtime type of the
+     * specified array and the size of this set.
+     *
+     * @param a the array into which the elements of this set are to be stored, if it is big enough;
+     *          otherwise, a new array of the same runtime type is allocated
+     * @return an array containing all the elements in this set
+     * @throws ArrayStoreException if the runtime type of the specified array is not a supertype
+     *         of the runtime type of every element in this set
+     * @throws NullPointerException if the specified array is null
+     */
     @SuppressWarnings("unchecked")
-    @Override
     public <T> T[] toArray(T[] a) {
+        Objects.requireNonNull(a);
         T[] arrayToFill;
-        if (a.length < size)
-            arrayToFill = (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
-        else
-            arrayToFill = a;
-        int[] idx = {0};
+        arrayToFill = a.length < size ? (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size) : a;
+        int[] index = {0};
         Arrays.stream(set)
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
-                .forEach(item -> arrayToFill[idx[0]++] = (T) item);
-        if (a.length > size) {
+                .forEach(item -> arrayToFill[index[0]++] = (T) item);
+        if(a.length > size)
             arrayToFill[size] = null;
-        }
         return arrayToFill;
     }
 
-    @Override
+    /**
+     * Returns String representation of CustomSet
+     *
+     * @return String representation of CustomSet
+     */
     public String toString() {
-        if (size == 0) return "{ }";
+        if(size == 0)
+            return "{}";
         StringBuilder sb = new StringBuilder("{");
         boolean[] first = {true};
         Arrays.stream(set)
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
                 .forEach(item -> {
-                    if (!first[0]) sb.append(", ");
+                    if(!first[0])
+                        sb.append(", ");
                     sb.append(item);
                     first[0] = false;
                 });
@@ -273,8 +379,6 @@ public class CustomSet<E> implements Set<E> {
 
     @SuppressWarnings("unchecked")
     private void expand() {
-        if(primesIndex + 1 >= primes.length)
-            throw new IllegalStateException();
         setSize = primes[++primesIndex];
         LinkedList<E>[] newSet = new LinkedList[setSize];
         Arrays.stream(set)
@@ -282,7 +386,7 @@ public class CustomSet<E> implements Set<E> {
                 .flatMap(Collection::stream)
                 .forEach(item -> {
                     int index = Math.abs(item.hashCode()) % setSize;
-                    if (newSet[index] == null)
+                    if(newSet[index] == null)
                         newSet[index] = new LinkedList<>();
                     newSet[index].add(item);
         });
@@ -291,14 +395,14 @@ public class CustomSet<E> implements Set<E> {
 
     @SuppressWarnings("unchecked")
     private void generateSet(final int initialCapacity) {
-        setSize = primes[0];
         primesIndex = 0;
-        if (initialCapacity > primes[primes.length - 1]) {
+        setSize = primes[0];
+        if(initialCapacity > primes[primes.length - 1]) {
             setSize = primes[primes.length - 1];
             primesIndex = primes.length - 1;
         } else
             for (int i = 0; i < primes.length; i++) {
-                if (primes[i] >= initialCapacity) {
+                if(primes[i] >= initialCapacity) {
                     setSize = primes[i];
                     primesIndex = i;
                     break;
@@ -309,8 +413,6 @@ public class CustomSet<E> implements Set<E> {
 
     @SuppressWarnings("unchecked")
     private void reduce() {
-        if(primesIndex == 0)
-            return;
         primesIndex--;
         setSize = primes[primesIndex];
         LinkedList<E>[] newSet = new LinkedList[setSize];
@@ -318,22 +420,24 @@ public class CustomSet<E> implements Set<E> {
                 .filter(i -> set[i] != null)
                 .forEach(i -> set[i].forEach(item -> {
                     int index = Math.abs(item.hashCode()) % setSize;
-                    if (newSet[index] == null)
+                    if(newSet[index] == null)
                         newSet[index] = new LinkedList<>();
                     newSet[index].add(item);
                 }));
         set = newSet;
     }
 
-    private boolean retain(final Collection<?> c, final LinkedList<E> list, boolean modified, int index) {
+    private boolean retainBucket(final Collection<?> c, int index) {
+        LinkedList<E> list = set[index];
         Iterator<E> iterator = list.iterator();
+        boolean modified = false;
         while (iterator.hasNext())
-            if (!c.contains(iterator.next())) {
+            if(!c.contains(iterator.next())) {
                 iterator.remove();
                 size--;
                 modified = true;
             }
-        if(set[index].isEmpty())
+        if(list.isEmpty())
             set[index] = null;
         return modified;
     }

@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 group = 'org.example'
@@ -10,10 +11,72 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.jfree:jfreechart:1.5.4'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    implementation("org.jfree:jfreechart:1.5.4")
 }
 
 test {
     useJUnitPlatform()
+
+    // Generate JaCoCo report after tests complete
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+    reportsDirectory = layout.buildDirectory.dir('reports/jacoco')
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+
+    // Exclude inner, anonymous, and synthetic classes
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/*$*'
+            ])
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+
+    // Apply the same exclusions used by the report
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/*$*'
+            ])
+        }))
+    }
+}
+
+// Fail the build if line coverage is below 80%
+check.dependsOn jacocoTestCoverageVerification
+
+// Convenience task: ./gradlew coverage
+tasks.register('coverage') {
+    group = 'Verification'
+    description = 'Runs tests, generates JaCoCo reports, and fails if line coverage is below 80%.'
+    dependsOn jacocoTestCoverageVerification
 }

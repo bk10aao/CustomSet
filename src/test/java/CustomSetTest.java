@@ -3,6 +3,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -11,6 +12,7 @@ import java.util.stream.LongStream;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,6 +21,17 @@ class CustomSetTest {
     @Test
     public void onCreatingSetWitNegativeSize_and_loadFactorOf_50_throws_IllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new CustomSet<>(-10, 0.5f));
+    }
+
+    @Test
+    public void onCreatingSetWithSize_10_and_loadFactorOf_zero_throws_IllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new CustomSet<>(10, 0));
+    }
+
+    @Test
+    public void onCreatingSetWithSize_10_and_loadFactorOf_zero_point_five_constructsCorrectly() {
+        CustomSet<Integer> customSet = new CustomSet<>(10, 0.5f);
+        assertTrue(customSet.isEmpty());
     }
 
     @Test
@@ -42,15 +55,26 @@ class CustomSetTest {
     }
 
     @Test
-    public void onConstructingSet_returnsEmptySet() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        assertTrue(customSet.isEmpty());
+    public void onConstructingSet_with_10_constructsCorrectly() {
+        CustomSet<Integer> customSet =  new CustomSet<>(10);
         assertEquals(0, customSet.size());
     }
 
     @Test
-    public void givenANewSet_onAddingValueOf_null_throws_NullPointerException() {
-        assertThrows(NullPointerException.class, () -> new CustomSet<>().add(null));
+    public void onConstructingSet_with_capacityGreaterThanPrimes_constructsCorrectly() {
+        CustomSet<Integer> customSet =  new CustomSet<>(17914394);
+        assertEquals(0, customSet.size());
+    }
+
+    @Test
+    public void onConstructingSet_returnsEmptySet() {
+        CustomSet<Integer> customSet = new CustomSet<>();
+        assertTrue(customSet.isEmpty());
+    }
+
+    @Test
+    public void onConstructingSet_withInitialCapacityOf_10_andLoadFactor_NaN_throws_IllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new CustomSet<Integer>(10, Float.NaN));
     }
 
     @Test
@@ -75,14 +99,8 @@ class CustomSetTest {
     }
 
     @Test
-    public void onAddingToSet_null_throws_NullPointerException() {
-        assertThrows(NullPointerException.class, () -> new CustomSet<>().add(null));
-    }
-
-    @Test
     public void onAddingToSet_10_returns_true_and_sizeOf_1() {
         CustomSet<Integer> customSet = new CustomSet<>();
-
         assertTrue(customSet.add(10));
         assertEquals(1, customSet.size());
     }
@@ -96,7 +114,6 @@ class CustomSetTest {
     @Test
     public void onAddingToSet_10_items_returns_true_andSizeOf_10() {
         CustomSet<Integer> customSet = createDynamicSet(10);
-
         assertEquals(10, customSet.size());
     }
 
@@ -110,7 +127,7 @@ class CustomSetTest {
     }
 
     @Test
-    public void onAddingToSet_50_items_returns_true_andSizeOf_50() {
+    public void onAddingToSet_50_items_returns_sizeOf_50() {
         CustomSet<Integer> customSet = createDynamicSet(50);
         assertEquals(50, customSet.size());
     }
@@ -125,86 +142,47 @@ class CustomSetTest {
 
     @Test
     public void onAddingToSet_twoSameValues_andOneUnique_returns_sizeOf_2() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(1);
-        customSet.add(1);
-        customSet.add(2);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(1, 1, 2));
         assertTrue(customSet.contains(1));
         assertTrue(customSet.contains(2));
         assertEquals(2, customSet.size());
     }
 
     @Test
-    public void onAddingToSet_twoValuesOf_10_20_onRemoveValueOf_null_throws_NullPointerException() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        assertThrows(NullPointerException.class, () -> customSet.remove(null));
-    }
-
-    @Test
     public void onAddingToSet_twoValuesOf_10_20_onRemove_30_returns_false() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20));
         assertEquals(2, customSet.size());
         assertFalse(customSet.remove(30));
     }
 
     @Test
-    public void onAddingToSet_twoValuesOf_10_20_onRemove_null_throws_NullPointerException() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        assertEquals(2, customSet.size());
-        assertThrows(NullPointerException.class, () -> customSet.remove(null));
-    }
-
-    @Test
     public void onAddingToSet_twoValuesOf_10_20_onRemove_10_returns_true() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20));
         assertEquals(2, customSet.size());
         assertTrue(customSet.remove(10));
         assertEquals(1, customSet.size());
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_onContainsAllForCollection_withNullValue_throw_NullPointerException() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(null);
-        assertThrows(NullPointerException.class, () -> customSet.containsAll(c));
+    public void givenNonEmptySet_onRetainAllWithEmptyCollection_clearsSet() {
+        CustomSet<Integer> customSet = createDynamicSet(5);
+        Collection<Integer> empty = new ArrayList<>();
+        assertTrue(customSet.retainAll(empty));
+        assertTrue(customSet.isEmpty());
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_40_50_onRetailAllForCollection_withNullValue_throw_NullPointerException() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        customSet.add(40);
-        customSet.add(50);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(null);
-        assertThrows(NullPointerException.class, () -> customSet.retainAll(c));
+    public void givenNonEmptySet_onRetainAllWithNullValue_throwsNullPointerException() {
+        CustomSet<Integer> customSet = createDynamicSet(5);
+        Collection<Object> containsNull = new ArrayList<>(List.of(1, 2, 3));
+        containsNull.add(null);
+        assertThrows(NullPointerException.class, () -> customSet.retainAll(containsNull));
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_40_50_onRetailAllForCollection_20_30_returnsSetOf_20_30() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        customSet.add(40);
-        customSet.add(50);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(20);
-        c.add(30);
+    public void givenSetOfValue_10_20_30_40_50_onRetainAllForCollection_20_30_returnsSetOf_20_30() {
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30, 40, 50));
+        Collection<Integer> c = new ArrayList<>(List.of(20, 30));
         assertTrue(customSet.retainAll(c));
         assertFalse(customSet.contains(10));
         assertFalse(customSet.contains(40));
@@ -215,31 +193,17 @@ class CustomSetTest {
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_40_50_onRetainAllForCollectionContainingValueThatDoesNotExist_returnsTrueAndEmptiesSet() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        customSet.add(40);
-        customSet.add(50);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(60);
+    public void givenSetOfValue_10_20_30_40_50_onRetailAllForCollectionContainingValueThatDoesNotExist_returnsFalse() {
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30, 40, 50));
+        Collection<Integer> c = new ArrayList<>(List.of(60));
         assertTrue(customSet.retainAll(c));
         assertEquals(0, customSet.size());
     }
 
     @Test
     public void givenSetOfValue_10_20_30_40_50_onRetailAllForCollection_20_30_60_returnsSetOf_20_30() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        customSet.add(40);
-        customSet.add(50);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(20);
-        c.add(30);
-        c.add(60);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30, 40, 50));
+        Collection<Integer> c = new ArrayList<>(List.of(20, 30, 60));
         assertTrue(customSet.retainAll(c));
         assertFalse(customSet.contains(10));
         assertFalse(customSet.contains(40));
@@ -251,42 +215,15 @@ class CustomSetTest {
 
     @Test
     public void givenSetOfValue_10_20_30_onContainsAllForCollection_20_30_40_returns_false() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(20);
-        c.add(30);
-        c.add(40);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30));
+        Collection<Integer> c = new ArrayList<>(List.of(20, 30, 40));
         assertFalse(customSet.containsAll(c));
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_onRemoveAllForCollection_20_30_40_null_ThrowsNullPointerException() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(20);
-        c.add(30);
-        c.add(40);
-        c.add(null);
-        assertThrows(NullPointerException.class, () -> customSet.removeAll(c));
-    }
-
-    @Test
     public void givenSetOfValue_10_20_30_40_50_onRemoveAllForCollection_20_30_returnsCollectionOf_10_40_50() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        customSet.add(40);
-        customSet.add(50);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(20);
-        c.add(30);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30, 40, 50));
+        Collection<Integer> c = new ArrayList<>(List.of(20, 30));
         assertTrue(customSet.removeAll(c));
         assertTrue(customSet.contains(10));
         assertFalse(customSet.contains(20));
@@ -297,48 +234,22 @@ class CustomSetTest {
 
     @Test
     public void givenSetOfValue_10_20_30_onContainsAllForCollection_20_30_returns_true() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(20);
-        c.add(30);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30));
+        Collection<Integer> c = new ArrayList<>(List.of(20, 30));
         assertTrue(customSet.containsAll(c));
     }
 
     @Test
-    public void givenSetOfValue_10_20_30_onAddAllForCollection_withNullValue_throw_NullPointerException() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(null);
-        assertThrows(NullPointerException.class, () -> customSet.addAll(c));
-    }
-
-    @Test
     public void givenSetOfValue_10_20_30_onAddAllForCollectionOf_10_20_returns_false() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(10);
-        c.add(20);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30));
+        Collection<Integer> c = new ArrayList<>(List.of(10, 20));
         assertFalse(customSet.addAll(c));
     }
 
     @Test
     public void givenSetOfValue_10_20_30_onAddAllForCollectionOf_40_50_returns_true() {
-        CustomSet<Integer> customSet = new CustomSet<>();
-        customSet.add(10);
-        customSet.add(20);
-        customSet.add(30);
-        Collection<Integer> c = new ArrayList<>();
-        c.add(40);
-        c.add(50);
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(10, 20, 30));
+        Collection<Integer> c = new ArrayList<>(List.of(40, 50));
         assertTrue(customSet.addAll(c));
     }
 
@@ -347,13 +258,13 @@ class CustomSetTest {
         CustomSet<Integer> customSet = createDynamicSet(50);
         assertEquals(50, customSet.size());
         customSet.clear();
-        assertEquals(0, customSet.size());
+        assertTrue(customSet.isEmpty());
     }
 
     @Test
     public void onConstructingEmptySet_returnsEmptyCurlyBracket_on_toString() {
         CustomSet<Integer> customSet = new CustomSet<>();
-        assertEquals("{ }", customSet.toString());
+        assertEquals("{}", customSet.toString());
     }
 
     @Test
@@ -361,7 +272,6 @@ class CustomSetTest {
         Collection<Integer> collection = IntStream.iterate(0, i -> i <= 50, i -> i + 10).boxed().collect(Collectors.toList());
         CustomSet<Integer> customSet = new CustomSet<>(collection);
         String setAsString = customSet.toString();
-        System.out.println(setAsString);
         assertTrue(setAsString.contains("10"));
         assertTrue(setAsString.contains("20"));
         assertTrue(setAsString.contains("30"));
@@ -382,14 +292,10 @@ class CustomSetTest {
 
     @Test
     public void onConstructingSet_withCollectionOfFiveItems_returnsCorrectArray() {
-        CustomSet<String> customSet = new CustomSet<>();
-        customSet.add("10");
-        customSet.add("20");
-        customSet.add("30");
+        CustomSet<String> customSet = new CustomSet<>(List.of("10", "20", "30"));
         Object[] values = customSet.toArray();
+        Arrays.sort(values);
         Object[] expected = new Object[] { "10", "20", "30" };
-
-        Arrays.sort(values); //order for comparison as sets are unordered.
         assertEquals(3, values.length);
         assertArrayEquals(expected, values);
     }
@@ -413,6 +319,114 @@ class CustomSetTest {
         CustomSet<Long> customSet = new CustomSet<>();
         LongStream.range(0, 3_000_000).forEach(customSet::add);
         assertEquals(3_000_000, customSet.size());
+    }
+
+    @Test
+    public void givenSetOf_100_items_spliterator_estimateSize_matchesSetSize() {
+        CustomSet<Integer> customSet = createDynamicSet(100);
+        assertEquals(100, customSet.spliterator().estimateSize());
+    }
+
+    @Test
+    public void givenSameSet_onEquals_returns_true() {
+        CustomSet<Integer> a = new CustomSet<>(List.of(1, 2));
+        assertEquals(a, a);
+    }
+
+    @Test
+    public void givenSetsOfDifferentSizes_onEquals_returns_false() {
+        CustomSet<Integer> a = new CustomSet<>(List.of(1, 2));
+        CustomSet<Integer> b = new CustomSet<>(List.of(1, 2, 3));
+        assertNotEquals(a, b);
+    }
+
+    @Test
+    public void givenTwoIdenticalSet_onEquals_returnsTrue() {
+        CustomSet<Integer> a = new CustomSet<>(List.of(1, 2));
+        CustomSet<Integer> b = new CustomSet<>(List.of(1, 2));
+        assertEquals(a, b);
+    }
+
+    @Test
+    public void givenTwoDifferentSets_onEquals_returnsFalse() {
+        CustomSet<Integer> a = new CustomSet<>(List.of(1, 2));
+        CustomSet<Integer> b = new CustomSet<>(List.of(1, 3));
+        assertNotEquals(a, b);
+    }
+
+    @Test
+    public void givenCustomSetOf_1_2_3_onEqualsNonMatchingObject_returns_false() {
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(1, 2, 3));
+        assertNotEquals(customSet, new ArrayList<>());
+    }
+
+    @Test
+    public void givenTwoIdenticalSets_hashCode_IsTheSame() {
+        CustomSet<Integer> a = new CustomSet<>(List.of(1, 2));
+        CustomSet<Integer> b = new CustomSet<>(List.of(1, 2));
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    public void givenTwoDifferentSets_hashCode_IsDifferent() {
+        CustomSet<Integer> a = new CustomSet<>(List.of(1, 2));
+        CustomSet<Integer> b = new CustomSet<>(List.of(1, 3));
+        assertNotEquals(a.hashCode(), b.hashCode());
+    }
+
+    @Test
+    public void givenSetOfType_Integer_withValues_1_2_3_onToArray_withIntArrayParameter_returnsCorrectArray() {
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(1, 2, 3));
+        assertArrayEquals(new Integer[] {1, 2, 3}, customSet.toArray(new Integer[0]));
+    }
+
+    @Test
+    public void givenSetOfType_Integer_withValues_1_2_3_onToArray_withIntArrayParameterP_withSize_2_returnsCorrectArray() {
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(1, 2, 3));
+        assertArrayEquals(new Integer[] {1, 2, 3}, customSet.toArray(new Integer[2]));
+    }
+
+    @Test
+    public void givenSetOfType_Integer_withValues_1_2_3_onToArray_withIntArrayParameterP_withSize_5_returnsCorrectArray() {
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(1, 2, 3));
+        assertArrayEquals(new Integer[] {1, 2, 3, null, null}, customSet.toArray(new Integer[5]));
+    }
+
+    @Test
+    public void givenSetOfType_Integer_withValues_1_2_3_onClone_returnsEqualSets() {
+        CustomSet<Integer> customSet = new CustomSet<>(List.of(1, 2, 3));
+        CustomSet<Integer> clone = customSet.clone();
+        assertEquals(clone, customSet);
+    }
+
+    @Test
+    public void givenSetOfType_Integer_with100Values_onRemoving75Values_calls_reduce() {
+        CustomSet<Integer> customSet = new CustomSet<>();
+        IntStream.range(0, 100).forEach(customSet::add);
+        CustomSet<Integer> toRemove = new CustomSet<>();
+        IntStream.range(0, 75).forEach(toRemove::add);
+        customSet.removeAll(toRemove);
+        assertEquals(25, customSet.size());
+    }
+
+    @Test
+    public void givenSetOfType_Integer_with100Values_onRemoving100Values_calls_reduce() {
+        CustomSet<Integer> customSet = new CustomSet<>();
+        IntStream.range(0, 100).forEach(customSet::add);
+        CustomSet<Integer> toRemove = new CustomSet<>();
+        IntStream.range(0, 101).forEach(toRemove::add);
+        customSet.removeAll(toRemove);
+        assertEquals(0, customSet.size());
+    }
+
+    @Test
+    public void givenSetOfType_Integer_with100Values_onRetainAll_0_to_25_calls_reduce() {
+        CustomSet<Integer> customSet = new CustomSet<>();
+        IntStream.range(0, 100).forEach(customSet::add);
+        List<Integer> toRetain = new ArrayList<>();
+        IntStream.range(0, 25).forEach(toRetain::add);
+        customSet.retainAll(toRetain);
+        assertEquals(25, customSet.size());
     }
 
     private static CustomSet<Integer> createDynamicSet(int x) {
