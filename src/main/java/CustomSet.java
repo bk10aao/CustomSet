@@ -215,7 +215,7 @@ public class CustomSet<E> implements Set<E> {
             public E next() {
                 if(!hasNext())
                     throw new NoSuchElementException();
-                while (currentIterator == null || !currentIterator.hasNext()) {
+                while(currentIterator == null || !currentIterator.hasNext()) {
                     while (bucketIndex < set.length && set[bucketIndex] == null)
                         bucketIndex++;
                     if(bucketIndex >= set.length)
@@ -287,7 +287,7 @@ public class CustomSet<E> implements Set<E> {
         if(c.contains(null))
             throw new NullPointerException();
         boolean modified = false;
-        for (int i = 0; i < set.length; i++)
+        for(int i = 0; i < set.length; i++)
             if(set[i] != null)
                 modified = retainBucket(c, i) || modified;
         if(setSize > primes[0] && size <= setSize / 4)
@@ -401,7 +401,7 @@ public class CustomSet<E> implements Set<E> {
             setSize = primes[primes.length - 1];
             primesIndex = primes.length - 1;
         } else
-            for (int i = 0; i < primes.length; i++) {
+            for(int i = 0; i < primes.length; i++) {
                 if(primes[i] >= initialCapacity) {
                     setSize = primes[i];
                     primesIndex = i;
@@ -431,7 +431,7 @@ public class CustomSet<E> implements Set<E> {
         LinkedList<E> list = set[index];
         Iterator<E> iterator = list.iterator();
         boolean modified = false;
-        while (iterator.hasNext())
+        while(iterator.hasNext())
             if(!c.contains(iterator.next())) {
                 iterator.remove();
                 size--;
