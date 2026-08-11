@@ -1,12 +1,12 @@
-# Set
-Implementation of a Set using an array
+# customset
+Implementation of a customset using an array
 
-All methods implemented are identical to those found in the Java [Set](https://docs.oracle.com/javase/8/docs/api/java/util/Set.html) interface.
+All methods implemented are identical to those found in the Java [customset](https://docs.oracle.com/javase/8/docs/api/java/util/Set.html) interface.
 
 # Builder and Test
 
 1. To build and test the project run command `./gradlew clean build`
-2. To test the project run command `gradle test --tests CustomSetTest`
+2. To test the project run command `gradle test --tests customset.CustomSetTest`
 
 ## Time Complexity
 

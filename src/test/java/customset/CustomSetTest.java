@@ -1,3 +1,5 @@
+package customset;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ class CustomSetTest {
 
     @Test
     public void onCreatingSetWithSize_10_and_loadFactorOf_zero_point_five_constructsCorrectly() {
-        CustomSet<Integer> customSet = new CustomSet<>(10, 0.5f);
+        CustomSet<Integer> customSet = new CustomSet<Integer>(10, 0.5f);
         assertTrue(customSet.isEmpty());
     }
 

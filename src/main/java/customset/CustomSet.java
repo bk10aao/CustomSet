@@ -1,3 +1,5 @@
+package customset;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -7,6 +9,8 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.IntStream;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A custom implementation of the {@link Set} interface/>.
@@ -30,7 +34,6 @@ public class CustomSet<E> implements Set<E> {
     /**
      * Constructs an empty set with default initial capacity (17) and load factor (0.75).
      */
-    @SuppressWarnings("unchecked")
     public CustomSet() {
         set = new LinkedList[setSize];
     }
@@ -42,7 +45,7 @@ public class CustomSet<E> implements Set<E> {
      * @throws NullPointerException if the specified collection is null
      */
     public CustomSet(final Collection<? extends E> c) {
-        Objects.requireNonNull(c);
+        requireNonNull(c);
         generateSet(Math.max((int) (c.size() / LOAD_FACTOR) + 1, 1));
         addAll(c);
     }
@@ -107,7 +110,7 @@ public class CustomSet<E> implements Set<E> {
      * @throws NullPointerException if the specified collection is null
      */
     public boolean addAll(final Collection<? extends E> c) {
-        Objects.requireNonNull(c);
+        requireNonNull(c);
         int n = size;
         c.forEach(this::add);
         return n < size;
@@ -117,7 +120,6 @@ public class CustomSet<E> implements Set<E> {
      * Removes all the elements from this set.
      * The set will be empty after this call returns.
      */
-    @SuppressWarnings("unchecked")
     public void clear() {
         primesIndex = 0;
         setSize = primes[primesIndex];
@@ -137,7 +139,7 @@ public class CustomSet<E> implements Set<E> {
      * @return {@code true} if this set contains the specified element
      */
     public boolean contains(final Object item) {
-        Objects.requireNonNull(item);
+        requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
         if(set[index] == null)
             return false;
@@ -153,12 +155,12 @@ public class CustomSet<E> implements Set<E> {
      * @throws NullPointerException if the specified collection is null
      */
     public boolean containsAll(final Collection<?> c) {
-        Objects.requireNonNull(c);
+        requireNonNull(c);
         return c.stream().allMatch(this::contains);
     }
 
     /**
-     * Compares this set with another Set for equality. Returns true if the other
+     * Compares this set with another customset for equality. Returns true if the other
      * set has the same size and contains all the same elements.
      *
      * @param o the object to compare with
@@ -237,7 +239,7 @@ public class CustomSet<E> implements Set<E> {
      * @return {@code true} if this set contained the specified element
      */
     public boolean remove(final Object item) {
-        Objects.requireNonNull(item);
+        requireNonNull(item);
         int index = Math.abs(item.hashCode()) % setSize;
         if(!contains(item, index))
             return false;
@@ -262,7 +264,7 @@ public class CustomSet<E> implements Set<E> {
      * @throws NullPointerException if the specified collection is null
      */
     public boolean removeAll(final Collection<?> c) {
-        Objects.requireNonNull(c);
+        requireNonNull(c);
         boolean changed = false;
         for(Object item : c)
             if(remove(item))
@@ -283,7 +285,7 @@ public class CustomSet<E> implements Set<E> {
      * @throws NullPointerException if the specified collection is null or contains null elements
      */
     public boolean retainAll(final Collection<?> c) {
-        Objects.requireNonNull(c);
+        requireNonNull(c);
         if(c.contains(null))
             throw new NullPointerException();
         boolean modified = false;
@@ -311,7 +313,6 @@ public class CustomSet<E> implements Set<E> {
      *
      * @return an array containing all the elements in this set
      */
-    @SuppressWarnings("unchecked")
     public E[] toArray() {
         E[] arr = (E[]) new Object[size];
         int[] index = {0};
@@ -336,9 +337,8 @@ public class CustomSet<E> implements Set<E> {
      *         of the runtime type of every element in this set
      * @throws NullPointerException if the specified array is null
      */
-    @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
-        Objects.requireNonNull(a);
+        requireNonNull(a);
         T[] arrayToFill;
         arrayToFill = a.length < size ? (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size) : a;
         int[] index = {0};
@@ -377,7 +377,6 @@ public class CustomSet<E> implements Set<E> {
         return set[index] != null && set[index].contains(item);
     }
 
-    @SuppressWarnings("unchecked")
     private void expand() {
         setSize = primes[++primesIndex];
         LinkedList<E>[] newSet = new LinkedList[setSize];
@@ -393,7 +392,6 @@ public class CustomSet<E> implements Set<E> {
         set = newSet;
     }
 
-    @SuppressWarnings("unchecked")
     private void generateSet(final int initialCapacity) {
         primesIndex = 0;
         setSize = primes[0];
@@ -411,7 +409,6 @@ public class CustomSet<E> implements Set<E> {
         set = new LinkedList[setSize];
     }
 
-    @SuppressWarnings("unchecked")
     private void reduce() {
         primesIndex--;
         setSize = primes[primesIndex];
