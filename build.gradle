@@ -94,8 +94,8 @@ tasks.register('coverage') {
 
 jmh {
     includes = ['*CustomSetV1Benchmark*']
-    fork = 1
-    iterations = 5
-    warmupIterations = 3
+    fork = 2
+    iterations = 3
+    warmupIterations = 2
     profilers = ['gc']
 }
