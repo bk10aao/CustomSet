@@ -173,8 +173,8 @@ public class CustomSetV1Benchmark {
         Options opt = new OptionsBuilder()
                 .include(CustomSetV1Benchmark.class.getSimpleName())
                 .forks(1)
-                .result("custom-set-v1-results.csv") // Output file path
-                .resultFormat(ResultFormatType.CSV)             // Force CSV format
+                .result("custom-set-v1-results.csv")
+                .resultFormat(ResultFormatType.CSV)
                 .build();
 
         new Runner(opt).run();
