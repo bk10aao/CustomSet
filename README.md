@@ -10,34 +10,37 @@ All methods implemented are identical to those found in the Java [customset](htt
 
 ## Time Complexity
 
-|         Method          | CustomSet V1 (LinkedList) | 
-|:-----------------------:|:-------------------------:|
-|         add(E)          |           O(n)            |
-|   addAll(Collection)    |         O(n * m)          |
-|         clear()         |           O(1)            |
-|       contains(E)       |           O(n)            |
-| containsAll(Collection) |         O(n * m)          |
-|        isEmpty()        |           O(1)            |
-|        remove(E)        |           O(n)            |
-|  removeAll(Collection)  |         O(n * m)          |
-|  retainAll(Collection)  |         O(n * m)          |
-|         size()          |           O(1)            |
-|        toArray()        |           O(n)            |
-|       toString()        |           O(n)            |
+| Method                    |    V1    |   JDK    | Winner |
+|---------------------------|:--------:|:--------:|:------:|
+| `add(E)`                  |   O(n)   |   O(n)   |  Tie   |
+| `addAll(Collection)`      | O(n * m) | O(n * m) |  Tie   |
+| `clear()`                 |   O(1)   |   O(1)   |  Tie   |
+| `contains(E)`             |   O(n)   |   O(n)   |  Tie   |
+| `containsAll(Collection)` | O(n * m) | O(n * m) |  Tie   |
+| `isEmpty()`               |   O(1)   |   O(1)   |  Tie   |
+| `remove(E)`               |   O(n)   |   O(n)   |  Tie   |
+| `removeAll(Collection)`   | O(n * m) | O(n * m) |  Tie   |
+| `retainAll(Collection)`   | O(n * m) | O(n * m) |  Tie   |
+| `size()`                  |   O(1)   |   O(1)   |  Tie   |
+| `toArray()`               |   O(n)   |   O(n)   |  Tie   |
+| `toString()`              |   O(n)   |   O(n)   |  Tie   |
 
 ## Space Complexity
 
-|         Method          |  CustomSet V1 (LinkedList)  |
-|:-----------------------:|:---------------------------:|
-|         add(E)          |  O(n) + chaining overhead   |
-|   addAll(Collection)    |          O(n + m)           |
-|         clear()         |            O(1)             |
-|       contains(E)       | O(1) per bucket, O(n) worst |
-| containsAll(Collection) |          O(n * m)           |
-|        isEmpty()        |            O(1)             |
-|        remove(E)        | O(1) per bucket, O(n) worst |
-|  removeAll(Collection)  |          O(n * m)           |
-|  retainAll(Collection)  |          O(n * m)           |
-|         size()          |            O(1)             |
-|        toArray()        |            O(n)             |
-|       toString()        |            O(n)             |
+| Method                    |  V1  | JDK  | Winner |
+|---------------------------|:----:|:----:|:------:|
+| `add(E)`                  | O(1) | O(1) |  Tie   |
+| `addAll(Collection)`      | O(m) | O(m) |  Tie   |
+| `clear()`                 | O(1) | O(1) |  Tie   |
+| `contains(E)`             | O(1) | O(1) |  Tie   |
+| `containsAll(Collection)` | O(1) | O(1) |  Tie   |
+| `isEmpty()`               | O(1) | O(1) |  Tie   |
+| `remove(E)`               | O(1) | O(1) |  Tie   |
+| `removeAll(Collection)`   | O(1) | O(1) |  Tie   |
+| `retainAll(Collection)`   | O(1) | O(1) |  Tie   |
+| `size()`                  | O(1) | O(1) |  Tie   |
+| `toArray()`               | O(n) | O(n) |  Tie   |
+| `toString()`              | O(n) | O(n) |  Tie   |
+
+- `n`: Number of elements in the Set.
+- `m`: Number of elements in the input collection.
