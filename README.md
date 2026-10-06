@@ -1,5 +1,6 @@
 # Custom Set
-Implementation of a customset using an array
+
+Implementation of a Java set backed by an array.
 
 All methods implemented are identical to those found in the Java [customset](https://docs.oracle.com/javase/8/docs/api/java/util/Set.html) interface.
 
