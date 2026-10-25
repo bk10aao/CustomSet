@@ -70,9 +70,7 @@ public class CustomSet<E> implements Set<E> {
      * @throws IllegalArgumentException if the initial capacity is negative or the load factor is non-positive or NaN
      */
     public CustomSet(final int initialCapacity, final double loadFactor) {
-        if(initialCapacity < 0)
-            throw new IllegalArgumentException();
-        if(loadFactor <= 0 || Double.isNaN(loadFactor) || Double.isInfinite(loadFactor))
+        if(initialCapacity < 0 || loadFactor <= 0 || Double.isNaN(loadFactor) || Double.isInfinite(loadFactor))
             throw new IllegalArgumentException();
         this.LOAD_FACTOR = loadFactor;
         generateSet(initialCapacity);
@@ -156,11 +154,14 @@ public class CustomSet<E> implements Set<E> {
      */
     public boolean containsAll(final Collection<?> c) {
         requireNonNull(c);
-        return c.stream().allMatch(this::contains);
+        for (Object o : c)
+            if (!contains(o))
+                return false;
+        return true;
     }
 
     /**
-     * Compares this set with another customset for equality. Returns true if the other
+     * Compares this set with another custom set for equality. Returns true if the other
      * set has the same size and contains all the same elements.
      *
      * @param o the object to compare with
@@ -182,11 +183,12 @@ public class CustomSet<E> implements Set<E> {
      * @return the hash code value for this set
      */
     public int hashCode() {
-        return Arrays.stream(set)
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
-                .mapToInt(Object::hashCode)
-                .sum();
+        int sum = 0;
+        for (LinkedList<E> list : set)
+            if (list != null)
+                for (E e : list)
+                    sum += e.hashCode();
+        return sum;
     }
 
     /**
@@ -315,11 +317,12 @@ public class CustomSet<E> implements Set<E> {
      */
     public E[] toArray() {
         E[] arr = (E[]) new Object[size];
-        int[] index = {0};
-        Arrays.stream(set)
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
-                .forEach(item -> arr[index[0]++] = item);
+        int index = 0;
+        for (LinkedList<E> list : set) {
+            if (list != null)
+                for (E item : list)
+                    arr[index++] = item;
+        }
         return arr;
     }
 
@@ -339,13 +342,12 @@ public class CustomSet<E> implements Set<E> {
      */
     public <T> T[] toArray(T[] a) {
         requireNonNull(a);
-        T[] arrayToFill;
-        arrayToFill = a.length < size ? (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size) : a;
-        int[] index = {0};
-        Arrays.stream(set)
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
-                .forEach(item -> arrayToFill[index[0]++] = (T) item);
+        T[] arrayToFill = a.length < size ? (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size) : a;
+        int index = 0;
+        for (LinkedList<E> list : set)
+            if (list != null)
+                for (E item : list)
+                    arrayToFill[index++] = (T) item;
         if(a.length > size)
             arrayToFill[size] = null;
         return arrayToFill;
@@ -360,16 +362,15 @@ public class CustomSet<E> implements Set<E> {
         if(size == 0)
             return "{}";
         StringBuilder sb = new StringBuilder("{");
-        boolean[] first = {true};
-        Arrays.stream(set)
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
-                .forEach(item -> {
-                    if(!first[0])
+        boolean first = true;
+        for (LinkedList<E> list : set)
+            if (list != null)
+                for (E item : list) {
+                    if (!first)
                         sb.append(", ");
                     sb.append(item);
-                    first[0] = false;
-                });
+                    first = false;
+                }
         return sb.append('}').toString();
     }
 
@@ -380,15 +381,14 @@ public class CustomSet<E> implements Set<E> {
     private void expand() {
         setSize = primes[++primesIndex];
         LinkedList<E>[] newSet = new LinkedList[setSize];
-        Arrays.stream(set)
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
-                .forEach(item -> {
+        for (LinkedList<E> list : set)
+            if (list != null)
+                for (E item : list) {
                     int index = Math.abs(item.hashCode()) % setSize;
-                    if(newSet[index] == null)
+                    if (newSet[index] == null)
                         newSet[index] = new LinkedList<>();
                     newSet[index].add(item);
-        });
+            }
         set = newSet;
     }
 
@@ -398,13 +398,14 @@ public class CustomSet<E> implements Set<E> {
         if(initialCapacity > primes[primes.length - 1]) {
             setSize = primes[primes.length - 1];
             primesIndex = primes.length - 1;
-        } else
-            for(int i = 0; i < primes.length; i++) {
-                if(primes[i] >= initialCapacity) {
-                    setSize = primes[i];
-                    primesIndex = i;
-                    break;
-                }
+            set = new LinkedList[setSize];
+            return;
+        }
+        for(int i = 0; i < primes.length; i++)
+            if (primes[i] >= initialCapacity) {
+                setSize = primes[i];
+                primesIndex = i;
+                break;
             }
         set = new LinkedList[setSize];
     }
@@ -413,19 +414,21 @@ public class CustomSet<E> implements Set<E> {
         primesIndex--;
         setSize = primes[primesIndex];
         LinkedList<E>[] newSet = new LinkedList[setSize];
-        IntStream.range(0, set.length)
-                .filter(i -> set[i] != null)
-                .forEach(i -> set[i].forEach(item -> {
+        for (LinkedList<E> es : set)
+            if (es != null)
+                for (E item : es) {
                     int index = Math.abs(item.hashCode()) % setSize;
-                    if(newSet[index] == null)
+                    if (newSet[index] == null)
                         newSet[index] = new LinkedList<>();
                     newSet[index].add(item);
-                }));
+                }
         set = newSet;
     }
 
     private boolean retainBucket(final Collection<?> c, int index) {
         LinkedList<E> list = set[index];
+        if(list.isEmpty())
+            return false;
         Iterator<E> iterator = list.iterator();
         boolean modified = false;
         while(iterator.hasNext())
@@ -434,8 +437,6 @@ public class CustomSet<E> implements Set<E> {
                 size--;
                 modified = true;
             }
-        if(list.isEmpty())
-            set[index] = null;
         return modified;
     }
 
