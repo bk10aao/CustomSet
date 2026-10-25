@@ -1,14 +1,11 @@
 package customset;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -110,7 +107,8 @@ public class CustomSet<E> implements Set<E> {
     public boolean addAll(final Collection<? extends E> c) {
         requireNonNull(c);
         int n = size;
-        c.forEach(this::add);
+        for (E e : c)
+            add(e);
         return n < size;
     }
 
